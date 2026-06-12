@@ -1,158 +1,93 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { apiClient } from '@/lib/api';
-import { User } from '@/lib/types';
+import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+
+interface User {
+  id: number;
+  nombre: string;
+  email: string;
+  activo: boolean;
+  pymeId?: number;
+}
 
 export default function GestionRepartidoresPage() {
   const router = useRouter();
   const [repartidores, setRepartidores] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    const fetchRepartidores = async () => {
-      try {
-        setLoading(true);
-        setError(null);
+  const fetchRepartidores = async () => {
+    try {
+      const repartidorUsers = await apiClient.get<User[]>('/admin/users/by-role/REPARTIDOR');
+      setRepartidores(repartidorUsers);
+    } catch (err) { setError('Error al obtener repartidores.'); }
+  };
 
-        // Fetch users with REPARTIDOR role
-        const repartidorUsers = await apiClient.get<User[]>('/admin/users/by-role/REPARTIDOR');
-        setRepartidores(repartidorUsers);
-      } catch (err: any) {
-        console.error('Error fetching repartidores:', err);
-        setError('Error al cargar los repartidores. Asegúrate de que el backend esté corriendo.');
-      } finally {
-        setLoading(false);
-      }
-    };
+  useEffect(() => { fetchRepartidores(); }, []);
 
-    fetchRepartidores();
-  }, []);
-
-  // Function to toggle repartidor status
   const toggleEstado = async (userId: number, currentStatus: boolean) => {
     try {
       await apiClient.patch(`/admin/users/${userId}/toggle-status`, { activo: !currentStatus });
-      
-      // Refresh the list
-      const repartidorUsers = await apiClient.get<User[]>('/admin/users/by-role/REPARTIDOR');
-      setRepartidores(repartidorUsers);
-    } catch (err: any) {
-      console.error('Error toggling status:', err);
-      alert('Error al cambiar el estado del repartidor');
-    }
+      await fetchRepartidores();
+    } catch (err) { alert('Error de red.'); }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <p className="text-gray-500">Cargando repartidores...</p>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-red-600 font-semibold">{error}</p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="mt-4 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-          >
-            Reintentar
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Barra Superior */}
-      <nav className="bg-blue-950 text-white shadow-md px-6 py-4 flex justify-between items-center">
-        <div className="flex items-center space-x-3">
-          <span className="text-2xl">🚚</span>
-          <h1 className="text-xl font-bold tracking-tight">Pyme Track — Gestión de Repartidores</h1>
+    <div className="flex min-h-screen bg-gray-100 text-gray-900">
+      {/* SIDEBAR PROPIO DE ADMIN */}
+      <aside className="w-64 bg-blue-950 text-white flex flex-col justify-between p-5 shadow-lg shrink-0">
+        <div className="space-y-6">
+          <div className="border-b border-blue-900 pb-4">
+            <h2 className="text-xl font-black tracking-tight">PymeTrack Admin</h2>
+          </div>
+          <nav className="space-y-2">
+            <button onClick={() => router.push('/admin/monitoreo')} className="w-full text-left hover:bg-blue-900 px-4 py-2.5 rounded-xl font-semibold text-sm transition text-blue-100">📊 Monitoreo Global</button>
+            <button onClick={() => router.push('/admin/pymes')} className="w-full text-left hover:bg-blue-900 px-4 py-2.5 rounded-xl font-semibold text-sm transition text-blue-100">🏢 Control de PYMEs</button>
+            <button onClick={() => router.push('/admin/repartidores')} className="w-full text-left bg-blue-900 px-4 py-2.5 rounded-xl font-bold text-sm">🚚 Repartidores</button>
+          </nav>
         </div>
-        <button 
-          onClick={() => router.push('/admin/monitoreo')}
-          className="bg-gray-700 hover:bg-gray-600 text-xs font-bold py-2 px-4 rounded transition"
-        >
-          Volver al Resumen 📊
-        </button>
-      </nav>
+        <button onClick={() => { localStorage.clear(); router.push('/login'); }} className="w-full text-left bg-red-950 text-red-200 px-4 py-2.5 rounded-xl font-bold text-sm">🚪 Cerrar Sesión</button>
+      </aside>
 
-      {/* Contenido Principal */}
-      <main className="max-w-7xl mx-auto p-6 space-y-6">
-        
-        {/* Encabezado de la sección */}
-        <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
-          <h2 className="text-xl font-bold text-gray-800">Gestión de Repartidores (Trabajadores del Servicio)</h2>
-          <p className="text-gray-600 text-sm mt-1">
-            Como administrador del servicio de reparto, aquí puedes activar/desactivar repartidores.
-          </p>
+      <main className="flex-1 p-8 space-y-6 overflow-y-auto">
+        <div>
+          <h1 className="text-3xl font-black text-gray-900">🚚 Nómina Central de Repartidores</h1>
+          <p className="text-gray-500 text-sm mt-1">Monitoreo de estado de conductores logísticos.</p>
         </div>
 
-        {/* Tabla de Gestión */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        {error && <div className="bg-red-50 text-red-700 p-4 rounded-xl">{error}</div>}
+
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
           <table className="w-full text-left border-collapse">
-            <thead className="bg-gray-50 border-b border-gray-200">
-              <tr>
-                <th className="p-4 text-xs font-bold uppercase text-gray-500 tracking-wider">Nombre</th>
-                <th className="p-4 text-xs font-bold uppercase text-gray-500 tracking-wider">Email</th>
-                <th className="p-4 text-xs font-bold uppercase text-gray-500 tracking-wider">PYME Asignada</th>
-                <th className="p-4 text-xs font-bold uppercase text-gray-500 tracking-wider">Estado</th>
-                <th className="p-4 text-xs font-bold uppercase text-gray-500 tracking-wider text-center">Acciones</th>
+            <thead>
+              <tr className="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
+                <th className="p-4">Conductor</th>
+                <th className="p-4">Email</th>
+                <th className="p-4">Empresa N°</th>
+                <th className="p-4">Estado</th>
+                <th className="p-4 text-center">Acción</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 text-sm text-gray-700">
-              {repartidores.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="p-8 text-center text-gray-500">
-                    No hay repartidores registrados
+            <tbody className="divide-y divide-gray-100 text-sm">
+              {repartidores.map((rep) => (
+                <tr key={rep.id} className="hover:bg-gray-50/50 transition">
+                  <td className="p-4 font-bold text-gray-900">{rep.nombre}</td>
+                  <td className="p-4 text-gray-500">{rep.email}</td>
+                  <td className="p-4">{rep.pymeId ? `#${rep.pymeId}` : 'No asignado'}</td>
+                  <td className="p-4">
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${rep.activo ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{rep.activo ? 'Activo' : 'Suspendido'}</span>
+                  </td>
+                  <td className="p-4 text-center">
+                    <button onClick={() => toggleEstado(rep.id, rep.activo)} className={`text-xs font-bold py-1.5 px-4 rounded-xl transition ${rep.activo ? 'bg-amber-500 text-white' : 'bg-blue-600 text-white'}`}>
+                      {rep.activo ? '⚙️ Suspender' : '✅ Activar'}
+                    </button>
                   </td>
                 </tr>
-              ) : (
-                repartidores.map((repartidor) => (
-                  <tr key={repartidor.id} className="hover:bg-gray-50 transition">
-                    <td className="p-4 font-semibold text-gray-900">
-                      {repartidor.nombre} {repartidor.apellido || ''}
-                    </td>
-                    <td className="p-4 text-gray-600">{repartidor.email}</td>
-                    <td className="p-4 text-gray-600">
-                      {repartidor.pymeId ? `PYME #${repartidor.pymeId}` : 'Sin asignar'}
-                    </td>
-                    <td className="p-4">
-                      <span className={`px-2.5 py-0.5 rounded-full text-xs font-bold ${
-                        repartidor.activo 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-red-100 text-red-800'
-                      }`}>
-                        {repartidor.activo ? 'Activo' : 'Suspendido'}
-                      </span>
-                    </td>
-                    <td className="p-4 text-center">
-                      <button
-                        onClick={() => toggleEstado(repartidor.id, repartidor.activo)}
-                        className={`text-xs font-bold py-1.5 px-3 rounded transition ${
-                          repartidor.activo
-                            ? 'bg-amber-500 hover:bg-amber-600 text-white'
-                            : 'bg-green-600 hover:bg-green-700 text-white'
-                        }`}
-                      >
-                        {repartidor.activo ? '⚙️ Suspender' : '✅ Activar'}
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
+              ))}
             </tbody>
           </table>
         </div>
-
       </main>
     </div>
   );
