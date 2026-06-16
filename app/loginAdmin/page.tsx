@@ -37,7 +37,7 @@ export default function AdminLoginPage() {
       document.cookie = `pyme_token=${token}; path=/; max-age=86400; SameSite=Lax`;
 
       // Guardamos las marcas específicas de admin que necesitas para tus pantallas
-      localStorage.setItem('adminToken', 'active-session');
+      localStorage.setItem('adminToken', token);
       localStorage.setItem('adminUser', JSON.stringify({ name: userInfo?.nombre || 'Administrador', role: 'ADMIN' }));
       
       console.log('✅ Acceso concedido con éxito al panel de administración.');

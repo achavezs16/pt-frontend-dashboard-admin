@@ -4,10 +4,12 @@ import { apiClient } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
-// Interfaz para que TypeScript reconozca las métricas sin dar error
 interface AdminStats {
   totalPymes: number;
   totalRepartidores: number;
+  totalAdmins: number;
+  totalPedidos: number;
+  ultimaActualizacion?: string;
 }
 
 export default function MonitoreoPage() {
@@ -18,21 +20,21 @@ export default function MonitoreoPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Verificación de sesión de administrador
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('adminToken');
       const userRaw = localStorage.getItem('adminUser');
-      
+
       if (!token) {
-        router.push('/login');
+        router.push('/loginAdmin');
       } else if (userRaw) {
         setAdmin(JSON.parse(userRaw));
+      } else {
+        setAdmin({ name: 'Administrador', role: 'ADMIN' });
       }
     }
   }, [router]);
 
-  // Carga de datos reales desde los microservicios
   useEffect(() => {
     const fetchData = async () => {
       if (!admin) return;
@@ -41,19 +43,14 @@ export default function MonitoreoPage() {
         setLoading(true);
         setError(null);
 
-        // 1. Obtener estadísticas del backend administrativo
-        const statsData = await apiClient.get<AdminStats>('/admin/stats');
+        const response = await apiClient.get<AdminStats>('/bff/admin/stats');
+        const statsData = response.data;
+
         setStats(statsData);
-
-        // 2. Obtener total de pedidos desde tu microservicio ms-pedidos
-        const pedidosData = await apiClient.get<any[]>('/pedidos');
-        if (pedidosData && Array.isArray(pedidosData)) {
-          setTotalPedidos(pedidosData.length);
-        }
-
+        setTotalPedidos(statsData.totalPedidos || 0);
       } catch (err: any) {
         console.error('Error al cargar datos de monitoreo:', err);
-        setError('Error al conectar con los microservicios. Verifica que el backend esté corriendo.');
+        setError('Error al conectar con el BFF. Verifica que gateway y ms-bff estén corriendo.');
       } finally {
         setLoading(false);
       }
@@ -65,7 +62,8 @@ export default function MonitoreoPage() {
   const handleLogout = () => {
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminUser');
-    router.push('/login');
+    localStorage.removeItem('token');
+    router.push('/loginAdmin');
   };
 
   if (loading) {
@@ -79,8 +77,6 @@ export default function MonitoreoPage() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
-      
-      {/* Encabezado Superior con Estilo del nuevo Proyecto */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between bg-white p-6 rounded-xl shadow-sm border border-gray-100 gap-4">
         <div>
           <h1 className="text-2xl font-black text-blue-950">📊 Panel de Monitoreo Global</h1>
@@ -88,8 +84,7 @@ export default function MonitoreoPage() {
             Bienvenido, <span className="text-blue-700 font-bold">{admin?.name || 'Administrador'}</span> • Vista general de la infraestructura.
           </p>
         </div>
-        
-        {/* Menú de navegación rápida interna */}
+
         <div className="flex flex-wrap gap-2">
           <button 
             onClick={() => router.push('/admin/pymes')}
@@ -112,7 +107,6 @@ export default function MonitoreoPage() {
         </div>
       </div>
 
-      {/* Alerta de Error si el Back está apagado */}
       {error && (
         <div className="bg-red-50 border border-red-200 text-sm text-red-700 p-4 rounded-xl flex items-start space-x-2">
           <span>⚠️</span>
@@ -120,27 +114,25 @@ export default function MonitoreoPage() {
         </div>
       )}
 
-      {/* Tarjetas de Métricas usando los bordes de color de Tailwind */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 border-l-4 border-blue-600">
           <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">PYMEs Registradas</p>
           <p className="text-3xl font-black text-gray-900 mt-2">{stats?.totalPymes || 0} Empresas</p>
-          <p className="text-xs text-green-600 font-medium mt-1">● Sincronizado vía Gateway</p>
+          <p className="text-xs text-green-600 font-medium mt-1">● BFF vía Gateway</p>
         </div>
-        
+
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 border-l-4 border-purple-600">
           <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">Repartidores Activos</p>
           <p className="text-3xl font-black text-gray-900 mt-2">{stats?.totalRepartidores || 0} Conductores</p>
-          <p className="text-xs text-green-600 font-medium mt-1">● En operaciones locales</p>
+          <p className="text-xs text-green-600 font-medium mt-1">● Agregado desde BFF</p>
         </div>
-        
+
         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 border-l-4 border-emerald-600">
           <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">Flujo Total de Órdenes</p>
           <p className="text-3xl font-black text-gray-900 mt-2">{totalPedidos} Pedidos</p>
-          <p className="text-xs text-blue-600 font-medium mt-1">📡 ms-pedidos (Puerto 8082)</p>
+          <p className="text-xs text-blue-600 font-medium mt-1">📡 ms-pedidos vía BFF</p>
         </div>
       </div>
-
     </div>
   );
 }

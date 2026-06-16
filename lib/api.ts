@@ -28,10 +28,11 @@ class ApiClient {
     // Interceptor para agregar token JWT automáticamente
     this.client.interceptors.request.use(
       (config: any) => {
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('token') || localStorage.getItem('adminToken');
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
+        console.log('TOKEN ENVIADO:', token ? 'sí' : 'no');
         console.log('API Request:', config.method?.toUpperCase(), config.url);
         return config;
       },
