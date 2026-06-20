@@ -1,20 +1,31 @@
 import axios from 'axios';
 
-// Tu propia URL apuntando al puerto real del Gateway
-const BASE_URL_ADMIN = 'http://localhost:8086/api/v1';
+const BASE_URL_ADMIN =
+  process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8086/api/v1';
 
 export const apiAdminClient = axios.create({
   baseURL: BASE_URL_ADMIN,
-  timeout: 5000,
+  timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
 });
 
-// Servicio exclusivo para tu Login de Administrador
+apiAdminClient.interceptors.request.use((config) => {
+  const token =
+    typeof window !== 'undefined'
+      ? localStorage.getItem('token') || localStorage.getItem('adminToken')
+      : null;
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+
+  return config;
+});
+
 export const authAdminService = {
   login: async (email: string, password: string) => {
-    // Esto asegura que le pegas exactamente a http://localhost:8086/api/v1/auth/login
     return apiAdminClient.post('/auth/login', { email, password });
-  }
+  },
 };

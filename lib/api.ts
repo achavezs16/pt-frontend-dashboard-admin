@@ -92,90 +92,90 @@ class ApiClient {
 
   // Métodos específicos para pedidos - Conectando directamente a ms-pedidos
   async getPedidosByPyme(pymeId: number): Promise<AxiosResponse<any[]>> {
-    const response = await axios.get(`${MS_PEDIDOS_URL}/pedidos/pyme/${pymeId}`);
+    const response = await this.client.get(`${MS_PEDIDOS_URL}/pedidos/pyme/${pymeId}`);
     return response;
   }
 
   async getPedidos(params?: any): Promise<AxiosResponse<PaginatedResponse<any>>> {
-    const response = await axios.get(`${MS_PEDIDOS_URL}/pedidos`, { params });
+    const response = await this.client.get(`${MS_PEDIDOS_URL}/pedidos`, { params });
     return response;
   }
 
   async getPedido(id: number): Promise<AxiosResponse<any>> {
-    const response = await axios.get(`${MS_PEDIDOS_URL}/pedidos/${id}`);
+    const response = await this.client.get(`${MS_PEDIDOS_URL}/pedidos/${id}`);
     return response;
   }
 
   async crearPedido(data: any): Promise<AxiosResponse<any>> {
-    const response = await axios.post(`${MS_PEDIDOS_URL}/pedidos`, data);
+    const response = await this.client.post(`${MS_PEDIDOS_URL}/pedidos`, data);
     return response;
   }
 
   async actualizarPedido(id: number, data: any): Promise<AxiosResponse<any>> {
-    const response = await axios.put(`${MS_PEDIDOS_URL}/pedidos/${id}`, data);
+    const response = await this.client.put(`${MS_PEDIDOS_URL}/pedidos/${id}`, data);
     return response;
   }
 
   async eliminarPedido(id: number): Promise<AxiosResponse<void>> {
-    const response = await axios.delete(`${MS_PEDIDOS_URL}/pedidos/${id}`);
+    const response = await this.client.delete(`${MS_PEDIDOS_URL}/pedidos/${id}`);
     return response;
   }
 
   // Métodos específicos para productos - Conectando directamente a ms-productos
   async getProductos(params?: any): Promise<AxiosResponse<PaginatedResponse<any>>> {
-    const response = await axios.get(`${MS_PRODUCTOS_URL}/productos`, { params });
+    const response = await this.client.get(`${MS_PRODUCTOS_URL}/productos`, { params });
     return response;
   }
 
   async getProducto(id: number): Promise<AxiosResponse<any>> {
-    const response = await axios.get(`${MS_PRODUCTOS_URL}/productos/${id}`);
+    const response = await this.client.get(`${MS_PRODUCTOS_URL}/productos/${id}`);
     return response;
   }
 
   async crearProducto(data: any): Promise<AxiosResponse<any>> {
-    const response = await axios.post(`${MS_PRODUCTOS_URL}/productos`, data);
+    const response = await this.client.post(`${MS_PRODUCTOS_URL}/productos`, data);
     return response;
   }
 
   async actualizarProducto(id: number, data: any): Promise<AxiosResponse<any>> {
-    const response = await axios.put(`${MS_PRODUCTOS_URL}/productos/${id}`, data);
+    const response = await this.client.put(`${MS_PRODUCTOS_URL}/productos/${id}`, data);
     return response;
   }
 
   async eliminarProducto(id: number): Promise<AxiosResponse<void>> {
-    const response = await axios.delete(`${MS_PRODUCTOS_URL}/productos/${id}`);
+    const response = await this.client.delete(`${MS_PRODUCTOS_URL}/productos/${id}`);
     return response;
   }
 
   // Métodos específicos para pymes - Conectando directamente a ms-user
   async getPymes(params?: any): Promise<AxiosResponse<PaginatedResponse<any>>> {
-    const response = await axios.get(`${MS_USER_URL}/pymes`, { params });
+    const response = await this.client.get(`${MS_USER_URL}/pymes`, { params });
     return response;
   }
 
   async getPyme(id: number): Promise<AxiosResponse<any>> {
-    const response = await axios.get(`${MS_USER_URL}/pymes/${id}`);
+    const response = await this.client.get(`${MS_USER_URL}/pymes/${id}`);
     return response;
   }
 
   async crearPyme(data: any): Promise<AxiosResponse<any>> {
-    const response = await axios.post(`${MS_USER_URL}/pymes`, data);
+    const response = await this.client.post(`${MS_USER_URL}/pymes`, data);
     return response;
   }
 
   async actualizarPyme(id: number, data: any): Promise<AxiosResponse<any>> {
-    const response = await axios.put(`${MS_USER_URL}/pymes/${id}`, data);
+    const response = await this.client.put(`${MS_USER_URL}/pymes/${id}`, data);
     return response;
   }
 
   async eliminarPyme(id: number): Promise<AxiosResponse<void>> {
-    const response = await axios.delete(`${MS_USER_URL}/pymes/${id}`);
+    const response = await this.client.delete(`${MS_USER_URL}/pymes/${id}`);
     return response;
   }
 
   // Métodos de autenticación - Conectando directamente a ms-user
   async login(email: string, password: string) {
-    return axios.post(`${MS_USER_URL}/auth/login`, { email, password });
+    return this.client.post(`${MS_USER_URL}/auth/login`, { email, password });
   }
 
   async validateToken(token: string): Promise<AxiosResponse<any>> {
@@ -201,33 +201,33 @@ class ApiClient {
 
   // Métodos del BFF (agregación de datos) - Conectando directamente a BFF
   async getDashboard(pymeId: number) {
-    return axios.get(`${BFF_URL}/bff/dashboard/${pymeId}`);
+    return this.client.get(`${BFF_URL}/bff/dashboard/${pymeId}`);
   }
 
   async getEstadisticasPyme(pymeId: number): Promise<AxiosResponse<any>> {
-    const response = await axios.get(`${BFF_URL}/bff/pymes/${pymeId}/estadisticas`);
+    const response = await this.client.get(`${BFF_URL}/bff/pymes/${pymeId}/estadisticas`);
     return response;
   }
 
   async getProductosEnriquecidos(pymeId: number, categoria?: string): Promise<AxiosResponse<any>> {
     const params = categoria ? { categoria } : {};
-    const response = await axios.get(`${BFF_URL}/bff/pymes/${pymeId}/productos`, { params });
+    const response = await this.client.get(`${BFF_URL}/bff/pymes/${pymeId}/productos`, { params });
     return response;
   }
 
   async getPedidosEnriquecidos(pymeId: number, estado?: string): Promise<AxiosResponse<any>> {
     const params = estado ? { estado } : {};
-    const response = await axios.get(`${BFF_URL}/bff/pymes/${pymeId}/pedidos`, { params });
+    const response = await this.client.get(`${BFF_URL}/bff/pymes/${pymeId}/pedidos`, { params });
     return response;
   }
 
   async getResumenPyme(pymeId: number): Promise<AxiosResponse<any>> {
-    const response = await axios.get(`${BFF_URL}/bff/pymes/${pymeId}/resumen`);
+    const response = await this.client.get(`${BFF_URL}/bff/pymes/${pymeId}/resumen`);
     return response;
   }
 
   async getBffHealth(): Promise<AxiosResponse<any>> {
-    const response = await axios.get(`${BFF_URL}/bff/health`);
+    const response = await this.client.get(`${BFF_URL}/bff/health`);
     return response;
   }
 }
