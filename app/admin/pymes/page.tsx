@@ -3,6 +3,7 @@
 import { apiClient } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import CreateUserModal from '@/components/admin/CreateUserModal';
 
 interface User {
   id: number;
@@ -19,6 +20,7 @@ export default function GestionPymesPage() {
   const [pymes, setPymes] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const fetchPymes = async () => {
     try {
@@ -109,9 +111,22 @@ export default function GestionPymesPage() {
       </aside>
 
       <main className="flex-1 p-8 space-y-6 overflow-y-auto">
-        <div>
-          <h1 className="text-3xl font-black text-gray-900">🏢 Gestión Central de PYMEs</h1>
-          <p className="text-gray-500 text-sm mt-1">Supervisión operativa de empresas inscritas.</p>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-black text-gray-900">
+              🏢 Gestión Central de PYMEs
+            </h1>
+            <p className="text-gray-500 text-sm mt-1">
+              Supervisión operativa de empresas inscritas.
+            </p>
+          </div>
+
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="bg-blue-950 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-blue-900 transition"
+          >
+            ➕ Nueva PYME
+          </button>
         </div>
 
         {error && (
@@ -126,6 +141,7 @@ export default function GestionPymesPage() {
               <tr className="bg-gray-50 border-b border-gray-200 text-xs font-bold text-gray-500 uppercase tracking-wider">
                 <th className="p-4">Empresa</th>
                 <th className="p-4">Email</th>
+                <th className="p-4">ID PYME</th>
                 <th className="p-4">Estado</th>
                 <th className="p-4 text-center">Acción</th>
               </tr>
@@ -134,7 +150,7 @@ export default function GestionPymesPage() {
             <tbody className="divide-y divide-gray-100 text-sm">
               {pymes.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="p-6 text-center text-gray-500">
+                  <td colSpan={5} className="p-6 text-center text-gray-500">
                     No hay PYMEs registradas.
                   </td>
                 </tr>
@@ -146,6 +162,10 @@ export default function GestionPymesPage() {
                     </td>
 
                     <td className="p-4 text-gray-500">{pyme.email}</td>
+
+                    <td className="p-4 text-gray-600">
+                      {pyme.pymeId ? `#${pyme.pymeId}` : 'No asignado'}
+                    </td>
 
                     <td className="p-4">
                       <span
@@ -164,8 +184,8 @@ export default function GestionPymesPage() {
                         onClick={() => toggleEstado(pyme.id, pyme.activo)}
                         className={`text-xs font-bold py-1.5 px-4 rounded-xl transition ${
                           pyme.activo
-                            ? 'bg-amber-500 text-white'
-                            : 'bg-blue-600 text-white'
+                            ? 'bg-amber-500 text-white hover:bg-amber-600'
+                            : 'bg-blue-600 text-white hover:bg-blue-700'
                         }`}
                       >
                         {pyme.activo ? '⚙️ Suspender' : '✅ Activar'}
@@ -177,6 +197,13 @@ export default function GestionPymesPage() {
             </tbody>
           </table>
         </div>
+
+        <CreateUserModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          role="PYME"
+          onCreated={fetchPymes}
+        />
       </main>
     </div>
   );

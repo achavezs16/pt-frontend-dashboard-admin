@@ -3,6 +3,7 @@
 import { apiClient } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import CreateUserModal from '@/components/admin/CreateUserModal';
 
 interface User {
   id: number;
@@ -19,6 +20,7 @@ export default function GestionRepartidoresPage() {
   const [repartidores, setRepartidores] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const fetchRepartidores = async () => {
     try {
@@ -109,9 +111,22 @@ export default function GestionRepartidoresPage() {
       </aside>
 
       <main className="flex-1 p-8 space-y-6 overflow-y-auto">
-        <div>
-          <h1 className="text-3xl font-black text-gray-900">🚚 Nómina Central de Repartidores</h1>
-          <p className="text-gray-500 text-sm mt-1">Monitoreo de estado de conductores logísticos.</p>
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-black text-gray-900">
+              🚚 Nómina Central de Repartidores
+            </h1>
+            <p className="text-gray-500 text-sm mt-1">
+              Monitoreo de estado de conductores logísticos.
+            </p>
+          </div>
+
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="bg-blue-950 text-white px-5 py-2.5 rounded-xl font-bold text-sm hover:bg-blue-900 transition"
+          >
+            ➕ Nuevo repartidor
+          </button>
         </div>
 
         {error && (
@@ -148,7 +163,7 @@ export default function GestionRepartidoresPage() {
 
                     <td className="p-4 text-gray-500">{rep.email}</td>
 
-                    <td className="p-4">
+                    <td className="p-4 text-gray-600">
                       {rep.pymeId ? `#${rep.pymeId}` : 'No asignado'}
                     </td>
 
@@ -169,8 +184,8 @@ export default function GestionRepartidoresPage() {
                         onClick={() => toggleEstado(rep.id, rep.activo)}
                         className={`text-xs font-bold py-1.5 px-4 rounded-xl transition ${
                           rep.activo
-                            ? 'bg-amber-500 text-white'
-                            : 'bg-blue-600 text-white'
+                            ? 'bg-amber-500 text-white hover:bg-amber-600'
+                            : 'bg-blue-600 text-white hover:bg-blue-700'
                         }`}
                       >
                         {rep.activo ? '⚙️ Suspender' : '✅ Activar'}
@@ -182,6 +197,13 @@ export default function GestionRepartidoresPage() {
             </tbody>
           </table>
         </div>
+
+        <CreateUserModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          role="REPARTIDOR"
+          onCreated={fetchRepartidores}
+        />
       </main>
     </div>
   );
