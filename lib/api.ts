@@ -5,7 +5,7 @@ import { ApiError, PaginatedResponse } from '@/types';
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
 
 // Configuración base de axios - Conectar directamente a microservicios específicos
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8086/api/v1';
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://18.210.17.166:8086/api/v1';
 
 // URLs base para cada microservicio
 const MS_PEDIDOS_URL = API_BASE_URL;
